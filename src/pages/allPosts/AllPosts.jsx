@@ -40,21 +40,69 @@ function AllPosts() {
   }, [getAllPost]);
 
   const handleLike = async (id) => {
-    const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      likes: (likeCounts[id] || 0) + 1
-    });
-    setLikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    // Check if the user had disliked the post
+    if (userDislikes[id]) {
+      // Remove dislike
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        [`userDislikes.${user?.uid}`]: false
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserDislikes(prev => ({ ...prev, [id]: false }));
+    }
+  
+    // Check if the user already liked the post
+    if (!userLikes[id]) {
+      // Add like
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: (likeCounts[id] || 0) + 1,
+        [`userLikes.${user?.uid}`]: true
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserLikes(prev => ({ ...prev, [id]: true }));
+    } else {
+      // Remove like if already liked
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        [`userLikes.${user?.uid}`]: false
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserLikes(prev => ({ ...prev, [id]: false }));
+    }
   };
-
+  
   const handleDislike = async (id) => {
-    const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      dislikes: (dislikeCounts[id] || 0) + 1
-    });
-    setDislikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    // Check if the user had liked the post
+    if (userLikes[id]) {
+      // Remove like
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        [`userLikes.${user?.uid}`]: false
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserLikes(prev => ({ ...prev, [id]: false }));
+    }
+  
+    // Check if the user already disliked the post
+    if (!userDislikes[id]) {
+      // Add dislike
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: (dislikeCounts[id] || 0) + 1,
+        [`userDislikes.${user?.uid}`]: true
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserDislikes(prev => ({ ...prev, [id]: true }));
+    } else {
+      // Remove dislike if already disliked
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        [`userDislikes.${user?.uid}`]: false
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserDislikes(prev => ({ ...prev, [id]: false }));
+    }
   };
-
+  
   const handleAddComment = async (id) => {
     if (newComment.trim() === '') return;
 
@@ -166,7 +214,7 @@ function AllPosts() {
                         ${mode === 'dark' ? 'shadow-gray-700' : 'shadow-xl'} 
                         rounded-xl overflow-hidden`}
                       >
-                        <img className="w-full" src={thumbnail} alt="post" />
+                        <img className="w-60" src={thumbnail} alt="post" />
                         <div className="p-6">
                           <h2
                             className="tracking-widest text-xs title-font font-medium text-gray-400 mb-1"

@@ -14,6 +14,8 @@ function PostInfo() {
   const [comments, setComments] = useState({});
   const [likeCounts, setLikeCounts] = useState({});
   const [dislikeCounts, setDislikeCounts] = useState({});
+  const [userLikeStatus, setUserLikeStatus] = useState(null); // 'liked', 'disliked', or 'none'
+  const [userDislikeStatus, setUserDislikeStatus] = useState(null); // 'liked', 'disliked', or 'none'
   const { id } = useParams();
 
   useEffect(() => {
@@ -25,6 +27,8 @@ function PostInfo() {
         setLikeCounts({ [id]: docSnap.data().likes || 0 });
         setDislikeCounts({ [id]: docSnap.data().dislikes || 0 });
         setComments({ [id]: docSnap.data().comments || [] });
+        setUserLikeStatus(docSnap.data().userLikeStatus || 'none');
+        setUserDislikeStatus(docSnap.data().userDislikeStatus || 'none');
       }
     };
     fetchPostData();
@@ -32,18 +36,62 @@ function PostInfo() {
 
   const handleLike = async () => {
     const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      likes: (likeCounts[id] || 0) + 1
-    });
-    setLikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+
+    if (userLikeStatus === 'liked') {
+      // Remove like
+      await updateDoc(docRef, {
+        likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        userLikeStatus: 'none',
+      });
+      setLikeCounts((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserLikeStatus('none');
+    } else {
+      if (userDislikeStatus === 'disliked') {
+        // Remove dislike
+        await updateDoc(docRef, {
+          dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        });
+        setDislikeCounts((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+        setUserDislikeStatus('none');
+      }
+      // Add like
+      await updateDoc(docRef, {
+        likes: (likeCounts[id] || 0) + 1,
+        userLikeStatus: 'liked',
+      });
+      setLikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserLikeStatus('liked');
+    }
   };
 
   const handleDislike = async () => {
     const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      dislikes: (dislikeCounts[id] || 0) + 1
-    });
-    setDislikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+
+    if (userDislikeStatus === 'disliked') {
+      // Remove dislike
+      await updateDoc(docRef, {
+        dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        userDislikeStatus: 'none',
+      });
+      setDislikeCounts((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserDislikeStatus('none');
+    } else {
+      if (userLikeStatus === 'liked') {
+        // Remove like
+        await updateDoc(docRef, {
+          likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        });
+        setLikeCounts((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+        setUserLikeStatus('none');
+      }
+      // Add dislike
+      await updateDoc(docRef, {
+        dislikes: (dislikeCounts[id] || 0) + 1,
+        userDislikeStatus: 'disliked',
+      });
+      setDislikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserDislikeStatus('disliked');
+    }
   };
 
   const handleAddComment = async () => {
@@ -113,7 +161,7 @@ function PostInfo() {
                   }}
                   className={`h-full shadow-lg ${mode === 'dark' ? 'shadow-gray-700' : 'shadow-xl'} rounded-xl overflow-hidden`}
                 >
-                  <img className="w-full" src={postData.thumbnail} alt="post" />
+                  <img className="w-60" src={postData.thumbnail} alt="post" />
                   <div className="p-6">
                     <h2
                       className="tracking-widest text-xs title-font font-medium text-gray-400 mb-1"
@@ -139,13 +187,15 @@ function PostInfo() {
                       <div>
                         <Button
                           onClick={handleLike}
-                          className="mr-2"
+                          className={`mr-2 ${userLikeStatus === 'liked' ? 'text-blue-500' : 'text-gray-500'}`}
+                          style={{ backgroundColor: userLikeStatus === 'liked' ? 'rgba(0, 123, 255, 0.1)' : 'transparent' }}
                         >
                           👍 {likeCounts[id] || 0}
                         </Button>
                         <Button
                           onClick={handleDislike}
-                          className="mr-2"
+                          className={`mr-2 ${userDislikeStatus === 'disliked' ? 'text-red-500' : 'text-gray-500'}`}
+                          style={{ backgroundColor: userDislikeStatus === 'disliked' ? 'rgba(255, 0, 0, 0.1)' : 'transparent' }}
                         >
                           👎 {dislikeCounts[id] || 0}
                         </Button>

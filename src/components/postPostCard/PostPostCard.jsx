@@ -8,8 +8,7 @@ import socket from '../../socket/socket';
 
 function PostPostCard() {
   const context = useContext(myContext);
-  const { mode, getAllPost ,user} = context;
- // const socket = useContext(SocketContext); 
+  const { mode, getAllPost, user } = context;
 
   const [likeCounts, setLikeCounts] = useState({});
   const [dislikeCounts, setDislikeCounts] = useState({});
@@ -17,8 +16,9 @@ function PostPostCard() {
   const [newComment, setNewComment] = useState('');
   const [editCommentIndex, setEditCommentIndex] = useState(null);
   const [editedComment, setEditedComment] = useState('');
+  const [userLikes, setUserLikes] = useState({});
+  const [userDislikes, setUserDislikes] = useState({});
 
-  // Fetch post data on component mount
   useEffect(() => {
     const fetchData = async () => {
       const postData = {};
@@ -34,39 +34,78 @@ function PostPostCard() {
       setLikeCounts(Object.fromEntries(Object.entries(postData).map(([id, data]) => [id, data.likes || 0])));
       setDislikeCounts(Object.fromEntries(Object.entries(postData).map(([id, data]) => [id, data.dislikes || 0])));
       setComments(Object.fromEntries(Object.entries(postData).map(([id, data]) => [id, data.comments || []])));
+      // Initialize userLikes and userDislikes
+      setUserLikes(Object.fromEntries(Object.entries(postData).map(([id, data]) => [id, data.userLikes?.[user?.uid] || false])));
+      setUserDislikes(Object.fromEntries(Object.entries(postData).map(([id, data]) => [id, data.userDislikes?.[user?.uid] || false])));
     };
 
     fetchData();
-  }, [getAllPost]);
+  }, [getAllPost, user?.uid]);
 
   const handleLike = async (id) => {
-    const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      likes: (likeCounts[id] || 0) + 1
-    });
-    setLikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-
-    const post = getAllPost.find(post => post.id === id);
-  const postOwner = post?.userId; 
-  const postDescription = post?.description;
-  console.log(post)
-  socket.emit('like', { user: user?.displayName || user?.email, postOwner, description: postDescription });
+    // Check if the user had disliked the post
+    if (userDislikes[id]) {
+      // Remove dislike
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        [`userDislikes.${user?.uid}`]: false
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserDislikes(prev => ({ ...prev, [id]: false }));
+    }
+  
+    // Check if the user already liked the post
+    if (!userLikes[id]) {
+      // Add like
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: (likeCounts[id] || 0) + 1,
+        [`userLikes.${user?.uid}`]: true
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserLikes(prev => ({ ...prev, [id]: true }));
+    } else {
+      // Remove like if already liked
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        [`userLikes.${user?.uid}`]: false
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserLikes(prev => ({ ...prev, [id]: false }));
+    }
   };
-
+  
   const handleDislike = async (id) => {
-    const docRef = doc(fireDb, 'postPost', id);
-    await updateDoc(docRef, {
-      dislikes: (dislikeCounts[id] || 0) + 1
-    });
-    setDislikeCounts((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-    const post = getAllPost.find(post => post.id === id);
-    const postOwner = post?.userId; 
-    const postDescription = post?.description;
-    console.log(post)
-    socket.emit('dislike', { user: user?.displayName || user?.email, postOwner, description: postDescription });
-
-   
+    // Check if the user had liked the post
+    if (userLikes[id]) {
+      // Remove like
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        likes: Math.max((likeCounts[id] || 0) - 1, 0),
+        [`userLikes.${user?.uid}`]: false
+      });
+      setLikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserLikes(prev => ({ ...prev, [id]: false }));
+    }
+  
+    // Check if the user already disliked the post
+    if (!userDislikes[id]) {
+      // Add dislike
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: (dislikeCounts[id] || 0) + 1,
+        [`userDislikes.${user?.uid}`]: true
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+      setUserDislikes(prev => ({ ...prev, [id]: true }));
+    } else {
+      // Remove dislike if already disliked
+      await updateDoc(doc(fireDb, 'postPost', id), {
+        dislikes: Math.max((dislikeCounts[id] || 0) - 1, 0),
+        [`userDislikes.${user?.uid}`]: false
+      });
+      setDislikeCounts(prev => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+      setUserDislikes(prev => ({ ...prev, [id]: false }));
+    }
   };
+  
 
   const handleAddComment = async (id) => {
     if (newComment.trim() === '') return;
@@ -76,19 +115,16 @@ function PostPostCard() {
     await updateDoc(docRef, {
       comments: [...currentComments, { text: newComment, likes: 0, dislikes: 0 }]
     });
-    setComments((prev) => ({
+    setComments(prev => ({
       ...prev,
       [id]: [...(prev[id] || []), { text: newComment, likes: 0, dislikes: 0 }]
     }));
     setNewComment('');
 
-
     const post = getAllPost.find(post => post.id === id);
     const postOwner = post?.userId; 
     const postDescription = post?.description;
-    console.log(post)
     socket.emit('comment', { user: user?.displayName || user?.email, postOwner, description: postDescription });
-
   };
 
   const handleCommentLike = async (postId, commentIndex) => {
@@ -102,7 +138,7 @@ function PostPostCard() {
     await updateDoc(docRef, {
       comments: updatedComments
     });
-    setComments((prev) => ({
+    setComments(prev => ({
       ...prev,
       [postId]: updatedComments
     }));
@@ -119,7 +155,7 @@ function PostPostCard() {
     await updateDoc(docRef, {
       comments: updatedComments
     });
-    setComments((prev) => ({
+    setComments(prev => ({
       ...prev,
       [postId]: updatedComments
     }));
@@ -141,7 +177,7 @@ function PostPostCard() {
     await updateDoc(docRef, {
       comments: updatedComments
     });
-    setComments((prev) => ({
+    setComments(prev => ({
       ...prev,
       [postId]: updatedComments
     }));
@@ -156,7 +192,7 @@ function PostPostCard() {
     await updateDoc(docRef, {
       comments: updatedComments
     });
-    setComments((prev) => ({
+    setComments(prev => ({
       ...prev,
       [postId]: updatedComments
     }));
@@ -165,14 +201,14 @@ function PostPostCard() {
   return (
     <div>
       <section className="text-gray-600 body-font">
-        <div className="container px-5 py-10 mx-auto max-w-7xl">
+        <div className="container px-5 py-10 mx-auto max-w-3xl">
           <div className="flex flex-wrap justify-center -m-4 mb-5">
             {getAllPost.length > 0 ? (
               <>
                 {getAllPost.map((item, index) => {
                   const { thumbnail, id, date } = item;
                   return (
-                    <div className="p-4 md:w-1/3" key={index}>
+                    <div className="p-4 w-full" key={index}>
                       <div
                         style={{
                           background: mode === 'dark'
@@ -186,7 +222,7 @@ function PostPostCard() {
                         ${mode === 'dark' ? 'shadow-gray-700' : 'shadow-xl'} 
                         rounded-xl overflow-hidden`}
                       >
-                        <img className="w-full" src={thumbnail} alt="post" />
+                        <img className="w-60" src={thumbnail} alt="post" />
                         <div className="p-6">
                           <h2
                             className="tracking-widest text-xs title-font font-medium text-gray-400 mb-1"
@@ -212,13 +248,19 @@ function PostPostCard() {
                             <div>
                               <button
                                 onClick={() => handleLike(id)}
-                                className="mr-2 text-sm"
+                                className={`mr-2 text-sm ${userLikes[id] ? 'text-blue-500' : 'text-gray-500'}`}
+                                style={{
+                                  backgroundColor: userLikes[id] ? 'rgba(0, 123, 255, 0.1)' : 'transparent'
+                                }}
                               >
                                 👍 {likeCounts[id] || 0}
                               </button>
                               <button
                                 onClick={() => handleDislike(id)}
-                                className="mr-2 text-sm"
+                                className={`mr-2 text-sm ${userDislikes[id] ? 'text-red-500' : 'text-gray-500'}`}
+                                style={{
+                                  backgroundColor: userDislikes[id] ? 'rgba(255, 0, 0, 0.1)' : 'transparent'
+                                }}
                               >
                                 👎 {dislikeCounts[id] || 0}
                               </button>

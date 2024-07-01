@@ -47,10 +47,10 @@ const App = () => {
             <MyState>
                 <Router>
                     <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route path="/" element={ <ProtectedRouteForAdmin><Home /></ProtectedRouteForAdmin>} />
                      {/*  <Route path="/post" element={<Post />} />*/}
-                        <Route path="/allposts" element={<AllPosts />} />
-                        <Route path="/postinfo/:id" element={<PostInfo />} />
+                        <Route path="/allposts" element={ <ProtectedRouteForAdmin><AllPosts /></ProtectedRouteForAdmin>} />
+                        <Route path="/postinfo/:id" element={ <ProtectedRouteForAdmin><PostInfo /></ProtectedRouteForAdmin>} />
                         <Route path="/adminlogin" element={<AdminLogin />} />
                         <Route path="/dashboard" element={
                             <ProtectedRouteForAdmin>
