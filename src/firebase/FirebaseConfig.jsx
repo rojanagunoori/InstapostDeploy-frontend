@@ -1,8 +1,8 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import {getFirestore} from "firebase/firestore"
-import {getAuth} from "firebase/auth"
+import {doc, getFirestore, setDoc} from "firebase/firestore"
+import {getAuth, onAuthStateChanged} from "firebase/auth"
 import {getStorage} from "firebase/storage"
 
 // Your web app's Firebase configuration
@@ -21,11 +21,30 @@ const fireDb=getFirestore(app)
 const auth=getAuth(app)
 const storage=getStorage(app)
 
+onAuthStateChanged(auth, async (user) => {
+  console.log("first ",user)
+  if (user) {
+    console.log("users ",user)
+    const userRef = doc(fireDb, 'users', user.uid);
+    console.log("userRef",userRef)
+    await setDoc(userRef, {
+      uid: user.uid,
+      name: user.displayName || "No name provided",
+      email: user.email || "No email provided",
+    }, { merge: true });
+  }
+});
 const handleSignup = async (email, password, name) => {
   try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await updateUserProfile(user, name, null); // Set name, photoURL can be added if needed
+     // await updateUserProfile(user, name, null); // Set name, photoURL can be added if needed
+     await updateProfile(user, { displayName: name });
+      await setDoc(doc(fireDb, "users", user.uid), {
+        name: name,
+        email: email,
+        uid: user.uid // Storing user ID as well
+      });
       console.log("User signed up and profile updated");
   } catch (error) {
       console.error("Error signing up", error);
