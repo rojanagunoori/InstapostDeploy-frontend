@@ -41,7 +41,7 @@ const Home = () => {
       {showChat && selectedUser && (
         <Chat currentUser={currentUser} selectedUser={selectedUser} onClose={handleCloseChat} />
       )}
-      <Footer />
+    
     </Layout>
   );
 };
