@@ -18,6 +18,7 @@ function PostPostCard() {
   const [editedComment, setEditedComment] = useState('');
   const [userLikes, setUserLikes] = useState({});
   const [userDislikes, setUserDislikes] = useState({});
+  const [commentsVisibility, setCommentsVisibility] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -198,6 +199,13 @@ function PostPostCard() {
     }));
   };
 
+  const toggleCommentsVisibility = (postId) => {
+    setCommentsVisibility(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
   return (
     <div>
       <section className="text-gray-600 body-font">
@@ -265,9 +273,13 @@ function PostPostCard() {
                                 👎 {dislikeCounts[id] || 0}
                               </button>
                             </div>
+                            <Button className="bg-gray-500 text-white ml-auto" onClick={() => toggleCommentsVisibility(id)}>
+  {commentsVisibility[id] ? 'Hide Comments' : 'Show Comments'}
+</Button>
                           </div>
+                         
 
-                          <div className="mt-3">
+                          {commentsVisibility[id] && <div className="mt-3">
                             <textarea
                               className="shadow-[inset_0_0_4px_rgba(0,0,0,0.6)] w-full rounded-md p-1.5 outline-none mb-2"
                               placeholder="Add a comment"
@@ -333,7 +345,7 @@ function PostPostCard() {
                                 ))}
                               </ul>
                             )}
-                          </div>
+                          </div>}
                         </div>
                       </div>
                     </div>

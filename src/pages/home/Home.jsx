@@ -3,6 +3,7 @@ import Layout from '../../components/layout/Layout'
 import HeroSection from '../../components/heroSection/HeroSection'
 import PostPostCard from '../../components/postPostCard/PostPostCard'
 import Footer from '../../components/footer/Footer'
+import UserList from '../../components/userList/UserList'
 
 const Home = () => {
   useEffect(() => {
@@ -13,7 +14,7 @@ const Home = () => {
     <Layout>
       <HeroSection/>
       <PostPostCard/>
-      
+     
     </Layout>
     </>
   )
