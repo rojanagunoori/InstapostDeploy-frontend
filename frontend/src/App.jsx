@@ -1,6 +1,10 @@
-
-import React, { useContext, useEffect, useState } from 'react';
-import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+} from "react-router-dom";
 import Home from "./pages/home/Home";
 import Post from "./pages/post/Post";
 import AllPosts from "./pages/allPosts/AllPosts";
@@ -11,15 +15,13 @@ import Dashboard from "./pages/admin/dashboard/Dashboard";
 import MyState from "./context/data/myState";
 import CreatePost from "./pages/admin/createPost/CreatePost";
 import { Toaster } from "react-hot-toast";
-import MyContext from './context/data/MyContext';
-import Chat from './components/Chat/Chat';
-import './App.css';
-
-
+import MyContext from "./context/data/MyContext";
+import Chat from "./components/Chat/Chat";
+import "./App.css";
 
 const App = () => {
-    const [userId, setUserId] = useState('');
-  const [peerId, setPeerId] = useState('');
+  const [userId, setUserId] = useState("");
+  const [peerId, setPeerId] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -27,9 +29,9 @@ const App = () => {
     setPeerId(e.target.peerId.value);
   };
 
-    return (
-        <>
-        {/* <div className="App">
+  return (
+    <>
+      {/* <div className="App">
       {!userId ? (
         <form onSubmit={handleLogin} className="login-form">
           <input name="userId" type="text" placeholder="Your Username" required />
@@ -43,42 +45,48 @@ const App = () => {
         </>
       )}
     </div>*/}
-            
-            <MyState>
-                <Router>
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                     {/*  <Route path="/post" element={<Post />} />*/}
-                        <Route path="/allposts" element={<AllPosts />} />
-                        <Route path="/postinfo/:id" element={<PostInfo />} />
-                        <Route path="/adminlogin" element={<AdminLogin />} />
-                        <Route path="/dashboard" element={
-                            <ProtectedRouteForAdmin>
-                                <Dashboard />
-                            </ProtectedRouteForAdmin>
-                        } />
-                        <Route path="/createpost" element={
-                            <ProtectedRouteForAdmin>
-                                <CreatePost />
-                            </ProtectedRouteForAdmin>
-                        } />
-                        <Route path="/*" element={<NoPage />} />
-                    </Routes>
-                    <Toaster />
-                </Router>
-            </MyState>
-        </>
-    );
+
+      <MyState>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            {/*  <Route path="/post" element={<Post />} />*/}
+            <Route path="/allposts" element={<AllPosts />} />
+            <Route path="/postinfo/:id" element={<PostInfo />} />
+            <Route path="/adminlogin" element={<AdminLogin />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRouteForAdmin>
+                  <Dashboard />
+                </ProtectedRouteForAdmin>
+              }
+            />
+            <Route
+              path="/createpost"
+              element={
+                <ProtectedRouteForAdmin>
+                  <CreatePost />
+                </ProtectedRouteForAdmin>
+              }
+            />
+            <Route path="/*" element={<NoPage />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </MyState>
+    </>
+  );
 };
 
 export default App;
 
 export const ProtectedRouteForAdmin = ({ children }) => {
-    const { user } = useContext(MyContext);
+  const { user } = useContext(MyContext);
 
-    if (!user) {
-        return <Navigate to="/adminlogin" />;
-    }
+  if (!user) {
+    return <Navigate to="/adminlogin" />;
+  }
 
-    return children;
+  return children;
 };
