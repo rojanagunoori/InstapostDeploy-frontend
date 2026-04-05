@@ -27,6 +27,11 @@ app.use(
   }),
 );
 
+// **Add a test route to know if backend is working**
+app.get("/", (req, res) => {
+  res.send("✅ Backend is running! Socket.io server is live.");
+});
+
 const users = {}; // Stores { username: socketId }
 
 io.on("connection", (socket) => {
