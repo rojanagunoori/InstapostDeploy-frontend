@@ -1,5 +1,12 @@
 # InstaPost
 
+<video src="/frontend/public/instapost.mp4" controls="controls" style="max-width: 100%;">
+</video>
+
+![Screenshot 1](/frontend/public/Instapost1.png)
+![Screenshot 2](/frontend/public/instapost2.png)
+![Screenshot 3](/frontend/public/instapost3.png)
+
 A modern social media platform frontend built with React, Vite, and TailwindCSS. Users can view posts, like/dislike, comment, search, and share content with real-time notifications powered by Socket.IO.
 
 **Important Links:**
