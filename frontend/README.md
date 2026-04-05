@@ -1,6 +1,6 @@
 # InstaPost
 
-<video src="/frontend/public/instapost.mp4" controls="controls" style="max-width: 100%;">
+<video src="frontend/public/instapost.mp4" controls="controls" style="max-width: 100%;">
 </video>
 
 ![Screenshot 1](/frontend/public/Instapost1.png)
