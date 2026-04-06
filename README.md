@@ -1,11 +1,23 @@
 # InstaPost
 
-<video src="frontend/public/instapost.mp4" controls="controls" style="max-width: 100%;">
+## 🎥 Demo
+
+<video controls style="max-width: 100%;">
+  <source src="https://raw.githubusercontent.com/rojanagunoori/InstaPost-frontend/main/frontend/public/instapost.mp4" type="video/mp4">
 </video>
 
-![Screenshot 1](/frontend/public/Instapost1.png)
-![Screenshot 2](/frontend/public/instapost2.png)
-![Screenshot 3](/frontend/public/instapost3.png)
+<!-- 👉 If video doesn't play, click here:
+[▶ Watch Demo](https://raw.githubusercontent.com/rojanagunoori/InstaPost-frontend/main/frontend/public/instapost.mp4) -->
+
+---
+
+## 📸 Screenshots
+
+![Screenshot 1](https://raw.githubusercontent.com/rojanagunoori/InstaPost-frontend/main/frontend/public/Instapost1.png)
+
+![Screenshot 2](https://raw.githubusercontent.com/rojanagunoori/InstaPost-frontend/main/frontend/public/instapost2.png)
+
+![Screenshot 3](https://raw.githubusercontent.com/rojanagunoori/InstaPost-frontend/main/frontend/public/instapost3.png)
 
 A modern social media platform frontend built with React, Vite, and TailwindCSS. Users can view posts, like/dislike, comment, search, and share content with real-time notifications powered by Socket.IO.
 
